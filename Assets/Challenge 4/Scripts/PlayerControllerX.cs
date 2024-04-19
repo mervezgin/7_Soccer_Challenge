@@ -7,79 +7,64 @@ public class PlayerControllerX : MonoBehaviour
     Rigidbody playerRb;
     GameObject focalPoint;
 
+    [SerializeField] GameObject powerUpIndicator;
+
     [SerializeField] float speed;
+    [SerializeField] float normalStrength;
+    [SerializeField] float powerUpStrength;
 
-    /*
-    private Rigidbody playerRb;
-    private float speed = 500;
-    private GameObject focalPoint;
+    public bool hasPowerUp = false;
 
-    public bool hasPowerup;
-    public GameObject powerupIndicator;
-    public int powerUpDuration = 5;
+    int powerUpDuration = 7;
 
-    private float normalStrength = 10; // how hard to hit enemy without powerup
-    private float powerupStrength = 25; // how hard to hit enemy with powerup
-    */
     void Start()
     {
         playerRb = GetComponent<Rigidbody>();
         focalPoint = GameObject.Find("FocalPoint");
+        powerUpIndicator.gameObject.SetActive(false);
     }
 
     void Update()
     {
         float verticalInput = Input.GetAxis("Vertical");
         playerRb.AddForce(focalPoint.transform.forward * verticalInput * speed);
-        /* 
-
-        // Set powerup indicator position to beneath player
-        powerupIndicator.transform.position = transform.position + new Vector3(0, -0.6f, 0);
-        */
+        powerUpIndicator.transform.position = transform.position + new Vector3(0, -0.5f, 0);
     }
 
-    /*
-    // If Player collides with powerup, activate powerup
-    private void OnTriggerEnter(Collider other)
+    void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.CompareTag("Powerup"))
         {
             Destroy(other.gameObject);
-            hasPowerup = true;
-            powerupIndicator.SetActive(true);
+            hasPowerUp = true;
+            powerUpIndicator.gameObject.SetActive(true);
+            StartCoroutine(PowerUpCountdownRoutine());
         }
     }
-    */
-    /*
-    // Coroutine to count down powerup duration
-    IEnumerator PowerupCooldown()
+
+    void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Enemy") && hasPowerUp)
+        {
+            Rigidbody enemyRb = collision.gameObject.GetComponent<Rigidbody>();
+            Vector3 awayFromPlayer = collision.gameObject.transform.position - transform.position;
+
+            if (hasPowerUp)
+            {
+                enemyRb.AddForce(awayFromPlayer * powerUpStrength, ForceMode.Impulse);
+            }
+            else
+            {
+                enemyRb.AddForce(awayFromPlayer * normalStrength, ForceMode.Impulse);
+            }
+            Debug.Log("Player collided with " + collision.gameObject.name + " with power up set to " + hasPowerUp);
+        }
+    }
+
+    IEnumerator PowerUpCountdownRoutine()
     {
         yield return new WaitForSeconds(powerUpDuration);
-        hasPowerup = false;
-        powerupIndicator.SetActive(false);
+        hasPowerUp = false;
+        powerUpIndicator.gameObject.SetActive(false);
     }
-    */
-
-    /*
-    // If Player collides with enemy
-    private void OnCollisionEnter(Collision other)
-    {
-        if (other.gameObject.CompareTag("Enemy"))
-        {
-            Rigidbody enemyRigidbody = other.gameObject.GetComponent<Rigidbody>();
-            Vector3 awayFromPlayer =  transform.position - other.gameObject.transform.position; 
-           
-            if (hasPowerup) // if have powerup hit enemy with powerup force
-            {
-                enemyRigidbody.AddForce(awayFromPlayer * powerupStrength, ForceMode.Impulse);
-            }
-            else // if no powerup, hit enemy with normal strength 
-            {
-                enemyRigidbody.AddForce(awayFromPlayer * normalStrength, ForceMode.Impulse);
-            }
-
-
-        }
-    }
-    */
 }
